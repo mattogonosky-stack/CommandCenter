@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --bg:#070910;
+  --s1:#0e1018;
+  --s2:#161924;
+  --s3:#1d2130;
+  --border:#1f2333;
+  --border2:#2a2f45;
+  --text:#e2e6f3;
+  --muted:#525c7a;
+  --muted2:#3a4060;
+  --cyan:#00d4ff;
+  --orange:#ff6b35;
+  --green:#7fff6b;
+  --pink:#ff4d9d;
+  --gold:#ffc13b;
+  --purple:#a78bfa;
+}
+
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── Animated background ── */
+.bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(130px);opacity:.06;animation:orbDrift 20s ease-in-out infinite alternate}
+.orb1{width:700px;height:700px;background:var(--cyan);top:-200px;left:-150px}
+.orb2{width:500px;height:500px;background:var(--orange);bottom:-150px;right:-100px;animation-delay:-10s}
+.orb3{width:400px;height:400px;background:var(--purple);top:40%;left:50%;animation-delay:-5s}
+@keyframes orbDrift{from{transform:translate(0,0) scale(1)}to{transform:translate(50px,30px) scale(1.12)}}
+body::before{content:'';position:fixed;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,.01) 2px,rgba(255,255,255,.01) 4px);pointer-events:none;z-index:0}
+
+/* ── Layout ── */
+.wrap{position:relative;z-index:1;max-width:1140px;margin:0 auto;padding:0 1.75rem 3rem}
+
+/* ── Header ── */
+header{padding:2.75rem 0 1.75rem;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:1.5rem}
+.brand-eye{font-size:.62rem;letter-spacing:.25em;text-transform:uppercase;color:var(--cyan);margin-bottom:.35rem;font-weight:500}
+.brand-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.6rem,7vw,5rem);line-height:.9;letter-spacing:.04em;color:#fff}
+.brand-title span{color:var(--cyan)}
+.brand-sub{margin-top:.6rem;font-size:.78rem;color:var(--muted);font-weight:300;letter-spacing:.04em}
+.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:.4rem}
+#clock{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;color:var(--cyan);letter-spacing:.08em;line-height:1}
+#dateline{font-size:.65rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;text-align:right}
+
+.hline{height:1px;background:linear-gradient(90deg,var(--cyan) 0%,transparent 55%);margin:0 0 2rem;opacity:.25}
+
+/* ── Section label ── */
+.slabel{font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:.9rem;display:flex;align-items:center;gap:.6rem}
+.slabel::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ── TOP ROW: weather + announcement + countdown ── */
+.top-widgets{display:grid;grid-template-columns:1fr 2fr 1fr;gap:1rem;margin-bottom:2rem}
+@media(max-width:780px){.top-widgets{grid-template-columns:1fr}}
+
+/* shared widget shell */
+.widget{background:var(--s1);border:1px solid var(--border);border-radius:14px;overflow:hidden;position:relative}
+.widget-bar{height:2px;width:100%}
+.widget-body{padding:1.25rem 1.4rem}
+.widget-label{font-size:.58rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem;font-weight:500}
+
+/* ── Weather ── */
+#weather-widget .widget-bar{background:var(--cyan)}
+.wx-main{display:flex;align-items:center;gap:.9rem}
+.wx-icon{font-size:2.2rem;line-height:1}
+.wx-temp{font-family:'Bebas Neue',sans-serif;font-size:2.8rem;color:#fff;line-height:1}
+.wx-unit{font-size:1rem;color:var(--muted);vertical-align:super}
+.wx-info{font-size:.72rem;color:var(--muted);margin-top:.25rem;line-height:1.5}
+.wx-loc{font-size:.65rem;color:var(--cyan);letter-spacing:.05em;margin-top:.3rem}
+.wx-loading{font-size:.75rem;color:var(--muted);padding:.5rem 0}
+.wx-error{font-size:.7rem;color:var(--orange)}
+
+/* ── Announcement ── */
+#announce-widget .widget-bar{background:var(--gold)}
+.announce-body{position:relative}
+.announce-text{font-size:.92rem;font-weight:500;color:var(--text);line-height:1.55;min-height:2.5em;word-break:break-word}
+.announce-text.empty{color:var(--muted);font-style:italic;font-weight:300;font-size:.82rem}
+.announce-meta{font-size:.6rem;color:var(--muted2);margin-top:.5rem;letter-spacing:.05em}
+.announce-edit-area{display:none;flex-direction:column;gap:.5rem}
+.announce-edit-area textarea{background:var(--s2);border:1px solid var(--border2);border-radius:8px;padding:.55rem .75rem;color:var(--text);font-family:'Outfit',sans-serif;font-size:.82rem;resize:none;height:72px;outline:none;transition:border-color .2s;width:100%}
+.announce-edit-area textarea:focus{border-color:var(--gold)}
+.announce-row{display:flex;justify-content:space-between;align-items:center}
+.announce-btns{display:flex;gap:.4rem}
+.abtn{background:transparent;border:1px solid var(--border2);color:var(--muted);font-family:'Outfit',sans-serif;font-size:.62rem;padding:.28rem .7rem;border-radius:6px;cursor:pointer;transition:all .15s;letter-spacing:.05em;text-transform:uppercase}
+.abtn:hover{border-color:var(--text);color:var(--text)}
+.abtn.save{background:var(--gold);border-color:var(--gold);color:#000;font-weight:700}
+.abtn.save:hover{opacity:.85}
+.abtn.pin-btn{color:var(--gold);border-color:rgba(255,193,59,.3)}
+
+/* ── Countdown ── */
+#countdown-widget .widget-bar{background:var(--pink)}
+.cd-display{display:flex;gap:.4rem;align-items:flex-end;margin:.3rem 0 .3rem}
+.cd-unit{text-align:center}
+.cd-num{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:#fff;line-height:1;display:block}
+.cd-lbl{font-size:.5rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cd-sep{font-family:'Bebas Neue',sans-serif;font-size:1.8rem;color:var(--border2);padding-bottom:.1rem}
+.cd-event{font-size:.7rem;color:var(--pink);letter-spacing:.04em;font-weight:500;margin-bottom:.15rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cd-past{font-size:.75rem;color:var(--muted);padding:.5rem 0}
+.cd-set-form{display:none;flex-direction:column;gap:.45rem;margin-top:.4rem}
+.cd-set-form input{background:var(--s2);border:1px solid var(--border2);border-radius:7px;padding:.45rem .7rem;color:var(--text);font-family:'Outfit',sans-serif;font-size:.78rem;outline:none;transition:border-color .2s}
+.cd-set-form input:focus{border-color:var(--pink)}
+.cd-btns{display:flex;gap:.4rem;margin-top:.1rem}
+
+/* ── Quick Notes ── */
+.notes-section{margin-bottom:2rem}
+#notes-widget{background:var(--s1);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+#notes-widget .widget-bar{background:var(--green)}
+.notes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem;padding:0 1.4rem 1.25rem}
+.note-card{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem;position:relative;animation:fadeUp .3s ease both;min-height:90px;display:flex;flex-direction:column}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.note-card textarea{background:transparent;border:none;outline:none;color:var(--text);font-family:'Outfit',sans-serif;font-size:.78rem;line-height:1.6;resize:none;flex:1;width:100%;min-height:60px}
+.note-card textarea::placeholder{color:var(--muted2)}
+.note-footer{display:flex;align-items:center;justify-content:space-between;margin-top:.4rem}
+.note-ts{font-size:.56rem;color:var(--muted2);letter-spacing:.04em}
+.note-del{background:transparent;border:none;color:var(--muted2);cursor:pointer;font-size:.75rem;transition:color .15s;padding:0;line-height:1}
+.note-del:hover{color:var(--pink)}
+.add-note-btn{display:flex;align-items:center;gap:.4rem;background:transparent;border:1px dashed var(--border2);color:var(--muted);font-family:'Outfit',sans-serif;font-size:.68rem;padding:.55rem 1rem;border-radius:8px;cursor:pointer;transition:all .2s;letter-spacing:.06em;text-transform:uppercase;margin:0 1.4rem 1.25rem}
+.add-note-btn:hover{border-color:var(--green);color:var(--green)}
+
+/* ── Launch grid ── */
+.launch-section{margin-bottom:2rem}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:transform .25s,box-shadow .25s,border-color .25s;animation:riseIn .5s ease both;position:relative}
+.card:hover{transform:translateY(-4px);border-color:var(--card-color,var(--cyan));box-shadow:0 16px 50px rgba(0,0,0,.5),0 0 28px -6px var(--card-color,var(--cyan))}
+@keyframes riseIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.card:nth-child(1){animation-delay:.05s}.card:nth-child(2){animation-delay:.11s}.card:nth-child(3){animation-delay:.17s}.card:nth-child(4){animation-delay:.23s}.card:nth-child(5){animation-delay:.29s}
+.card-bar{height:3px;background:var(--card-color,var(--cyan))}
+.card-body{padding:1.3rem 1.4rem .9rem}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem}
+.card-icon{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;background:color-mix(in srgb,var(--card-color,var(--cyan)) 15%,transparent);border:1px solid color-mix(in srgb,var(--card-color,var(--cyan)) 30%,transparent)}
+.tag{font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;padding:.22rem .6rem;border-radius:20px;border:1px solid;font-weight:500}
+.tag-live{color:var(--green);border-color:rgba(127,255,107,.35);background:rgba(127,255,107,.07)}
+.tag-edit{color:var(--gold);border-color:rgba(255,193,59,.35);background:rgba(255,193,59,.07)}
+.tag-tool{color:var(--cyan);border-color:rgba(0,212,255,.35);background:rgba(0,212,255,.07)}
+.card-name{font-size:1.15rem;font-weight:700;color:#fff;letter-spacing:-.01em;margin-bottom:.25rem}
+.card-desc{font-size:.75rem;color:var(--muted);line-height:1.6;font-weight:300;min-height:2.4em;margin-bottom:1.1rem}
+.card-foot{display:flex;align-items:center;justify-content:space-between;padding:.8rem 1.4rem;border-top:1px solid var(--border);background:var(--s2)}
+.card-url{font-size:.6rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
+.launch-btn{display:inline-flex;align-items:center;gap:.35rem;background:var(--card-color,var(--cyan));color:#000;font-family:'Outfit',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;text-decoration:none;padding:.42rem .95rem;border-radius:6px;transition:opacity .15s,transform .15s;flex-shrink:0}
+.launch-btn:hover{opacity:.82;transform:scale(1.04)}
+.card-controls{position:absolute;top:.55rem;right:.65rem;display:flex;gap:.3rem;opacity:0;transition:opacity .2s;z-index:2}
+.card:hover .card-controls{opacity:1}
+.ctrl{background:rgba(14,16,24,.88);border:1px solid var(--border);color:var(--muted);width:25px;height:25px;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.68rem;transition:all .15s}
+.ctrl:hover{border-color:#fff;color:#fff}
+.ctrl.del:hover{border-color:var(--pink);color:var(--pink)}
+.card-add{background:transparent;border:1px dashed var(--border);border-radius:14px;min-height:185px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.55rem;cursor:pointer;transition:border-color .2s,background .2s}
+.card-add:hover{border-color:var(--cyan);background:rgba(0,212,255,.04)}
+.card-add .plus{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .2s;font-size:1.2rem}
+.card-add:hover .plus{border-color:var(--cyan);color:var(--cyan)}
+.card-add span{font-size:.66rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);transition:color .2s}
+.card-add:hover span{color:var(--cyan)}
+
+/* ── Modal ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.78);backdrop-filter:blur(6px);z-index:200;align-items:center;justify-content:center;padding:1rem}
+.overlay.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:18px;padding:2rem;width:100%;max-width:480px;animation:popIn .2s ease}
+@keyframes popIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem}
+.modal-hd h2{font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:.05em;color:#fff}
+.modal-x{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:1.2rem;transition:color .15s}
+.modal-x:hover{color:#fff}
+.fg{margin-bottom:.9rem}
+.fg label{display:block;font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin-bottom:.35rem;font-weight:500}
+.fg input,.fg textarea,.fg select{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:.58rem .8rem;color:var(--text);font-family:'Outfit',sans-serif;font-size:.83rem;outline:none;transition:border-color .2s}
+.fg input:focus,.fg textarea:focus,.fg select:focus{border-color:var(--cyan)}
+.fg textarea{resize:vertical;min-height:62px}
+.fg select option{background:var(--s2)}
+.fg-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.modal-ft{display:flex;gap:.7rem;justify-content:flex-end;margin-top:1.3rem}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);padding:.5rem 1.1rem;border-radius:8px;font-family:'Outfit',sans-serif;font-size:.78rem;cursor:pointer;transition:all .15s}
+.btn-ghost:hover{border-color:var(--text);color:var(--text)}
+.btn-primary{background:var(--cyan);border:none;color:#000;padding:.5rem 1.4rem;border-radius:8px;font-family:'Outfit',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;transition:opacity .15s;letter-spacing:.04em}
+.btn-primary:hover{opacity:.85}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%) translateY(60px);background:var(--s2);border:1px solid var(--border);border-left:3px solid var(--green);color:var(--text);padding:.65rem 1.3rem;border-radius:8px;font-size:.75rem;z-index:300;opacity:0;transition:all .3s ease;white-space:nowrap;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+<div class="bg-layer">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div>
+      <div class="brand-eye">Internal Dashboard</div>
+      <div class="brand-title">COMMAND<br><span>CENTER</span></div>
+      <div class="brand-sub">Quick access to all your live tools &amp; sites</div>
+    </div>
+    <div class="header-right">
+      <div id="clock">--:--:--</div>
+      <div id="dateline">Loading…</div>
+    </div>
+  </header>
+  <div class="hline"></div>
+
+  <!-- TOP WIDGETS ROW -->
+  <div class="slabel">At a Glance</div>
+  <div class="top-widgets">
+
+    <!-- WEATHER -->
+    <div class="widget" id="weather-widget">
+      <div class="widget-bar"></div>
+      <div class="widget-body">
+        <div class="widget-label">Weather</div>
+        <div id="wx-content"><div class="wx-loading">Fetching weather…</div></div>
+        <div class="wx-loc" id="wx-loc"></div>
+      </div>
+    </div>
+
+    <!-- ANNOUNCEMENT -->
+    <div class="widget" id="announce-widget">
+      <div class="widget-bar"></div>
+      <div class="widget-body">
+        <div class="announce-row">
+          <div class="widget-label">📌 Pinned Announcement</div>
+          <div class="announce-btns">
+            <button class="abtn pin-btn" id="announce-edit-btn" onclick="toggleAnnounce()">Edit</button>
+          </div>
+        </div>
+        <div class="announce-body" id="announce-view">
+          <div class="announce-text empty" id="announce-text">No announcement pinned. Click Edit to add one.</div>
+          <div class="announce-meta" id="announce-meta"></div>
+        </div>
+        <div class="announce-edit-area" id="announce-edit">
+          <textarea id="announce-input" placeholder="Type your announcement here…" maxlength="300"></textarea>
+          <div class="announce-btns">
+            <button class="abtn" onclick="cancelAnnounce()">Cancel</button>
+            <button class="abtn save" onclick="saveAnnounce()">Pin It</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COUNTDOWN -->
+    <div class="widget" id="countdown-widget">
+      <div class="widget-bar"></div>
+      <div class="widget-body">
+        <div class="announce-row" style="margin-bottom:.4rem">
+          <div class="widget-label">⏳ Countdown</div>
+          <button class="abtn" style="color:var(--pink);border-color:rgba(255,77,157,.3)" onclick="toggleCdForm()">Set</button>
+        </div>
+        <div id="cd-event-name" class="cd-event">No event set</div>
+        <div id="cd-display" class="cd-display"></div>
+        <div id="cd-form" class="cd-set-form">
+          <input type="text" id="cd-name-input" placeholder="Event name (e.g. HOA Meeting)" maxlength="40">
+          <input type="date" id="cd-date-input">
+          <div class="cd-btns">
+            <button class="abtn" onclick="toggleCdForm()">Cancel</button>
+            <button class="abtn save" style="background:var(--pink);border-color:var(--pink)" onclick="saveCountdown()">Set</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /top-widgets -->
+
+  <!-- QUICK NOTES -->
+  <div class="notes-section">
+    <div class="slabel">Quick Notes</div>
+    <div id="notes-widget" class="widget">
+      <div class="widget-bar"></div>
+      <div class="notes-grid" id="notes-grid"></div>
+      <button class="add-note-btn" onclick="addNote()">+ New Note</button>
+    </div>
+  </div>
+
+  <!-- LAUNCH GRID -->
+  <div class="launch-section">
+    <div class="slabel">Quick Launch</div>
+    <div class="cards-grid" id="cards-grid"></div>
+  </div>
+
+</div><!-- /wrap -->
+
+<!-- SITE MODAL -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="modal">
+    <div class="modal-hd">
+      <h2 id="modal-title">Add Site</h2>
+      <button class="modal-x" onclick="closeModal()">✕</button>
+    </div>
+    <div class="fg"><label>Site / App Name</label><input id="f-name" type="text" placeholder="e.g. HOA Portal"></div>
+    <div class="fg"><label>URL</label><input id="f-url" type="url" placeholder="https://…"></div>
+    <div class="fg"><label>Description</label><textarea id="f-desc" placeholder="What does this site do?"></textarea></div>
+    <div class="fg-row">
+      <div class="fg"><label>Tag</label>
+        <select id="f-tag">
+          <option value="live">Live</option>
+          <option value="edit">Edit Mode</option>
+          <option value="tool">Tool</option>
+        </select>
+      </div>
+      <div class="fg"><label>Emoji Icon</label><input id="f-icon" type="text" placeholder="🏠" maxlength="4"></div>
+    </div>
+    <div class="fg"><label>Accent Color</label>
+      <select id="f-color">
+        <option value="#00d4ff">Cyan</option>
+        <option value="#ff6b35">Orange</option>
+        <option value="#7fff6b">Green</option>
+        <option value="#ff4d9d">Pink</option>
+        <option value="#ffc13b">Gold</option>
+        <option value="#a78bfa">Purple</option>
+      </select>
+    </div>
+    <div class="modal-ft">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-primary" onclick="saveCard()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ───── CLOCK ───── */
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=n.toLocaleTimeString('en-US',{hour12:true,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('dateline').textContent=n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+}
+tick(); setInterval(tick,1000);
+
+/* ───── WEATHER ───── */
+const WX_ICONS={
+  0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',
+  51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',
+  71:'🌨️',73:'🌨️',75:'❄️',80:'🌦️',81:'🌧️',82:'⛈️',
+  95:'⛈️',96:'⛈️',99:'⛈️'
+};
+const WX_DESC={
+  0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',
+  45:'Foggy',48:'Icy fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',
+  61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',
+  80:'Showers',81:'Rain showers',82:'Violent showers',95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm'
+};
+
+async function loadWeather(){
+  const el=document.getElementById('wx-content');
+  const loc=document.getElementById('wx-loc');
+  try{
+    const geoR=await fetch('https://ipapi.co/json/');
+    const geo=await geoR.json();
+    const lat=geo.latitude,lon=geo.longitude,city=geo.city||'Your Area';
+    const wxR=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&temperature_unit=fahrenheit&windspeed_unit=mph`);
+    const wx=await wxR.json();
+    const cw=wx.current_weather;
+    const code=cw.weathercode;
+    const icon=WX_ICONS[code]||'🌡️';
+    const desc=WX_DESC[code]||'';
+    const wind=Math.round(cw.windspeed);
+    el.innerHTML=`
+      <div class="wx-main">
+        <div class="wx-icon">${icon}</div>
+        <div>
+          <div class="wx-temp">${Math.round(cw.temperature)}<span class="wx-unit">°F</span></div>
+          <div class="wx-info">${desc} &nbsp;·&nbsp; Wind ${wind} mph</div>
+        </div>
+      </div>`;
+    loc.textContent=`📍 ${city}`;
+  }catch(e){
+    el.innerHTML=`<div class="wx-error">Could not load weather</div>`;
+  }
+}
+loadWeather();
+
+/* ───── ANNOUNCEMENT ───── */
+let announce=JSON.parse(localStorage.getItem('cc-announce')||'null')||{text:'',ts:''};
+
+function renderAnnounce(){
+  const txt=document.getElementById('announce-text');
+  const meta=document.getElementById('announce-meta');
+  if(announce.text){
+    txt.textContent=announce.text;
+    txt.classList.remove('empty');
+    meta.textContent=announce.ts?'Pinned '+announce.ts:'';
+  } else {
+    txt.textContent='No announcement pinned. Click Edit to add one.';
+    txt.classList.add('empty');
+    meta.textContent='';
+  }
+}
+
+function toggleAnnounce(){
+  const view=document.getElementById('announce-view');
+  const edit=document.getElementById('announce-edit');
+  const btn=document.getElementById('announce-edit-btn');
+  const isOpen=edit.style.display==='flex';
+  if(isOpen){cancelAnnounce();}
+  else{
+    edit.style.display='flex';
+    view.style.display='none';
+    btn.textContent='Cancel';
+    document.getElementById('announce-input').value=announce.text;
+  }
+}
+function cancelAnnounce(){
+  document.getElementById('announce-edit').style.display='none';
+  document.getElementById('announce-view').style.display='block';
+  document.getElementById('announce-edit-btn').textContent='Edit';
+}
+function saveAnnounce(){
+  const val=document.getElementById('announce-input').value.trim();
+  announce={text:val,ts:val?new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):''};
+  localStorage.setItem('cc-announce',JSON.stringify(announce));
+  cancelAnnounce();
+  renderAnnounce();
+  showToast('Announcement pinned!');
+}
+renderAnnounce();
+
+/* ───── COUNTDOWN ───── */
+let cdData=JSON.parse(localStorage.getItem('cc-countdown')||'null')||{name:'',date:''};
+let cdInterval=null;
+
+function renderCountdown(){
+  const nameEl=document.getElementById('cd-event-name');
+  const dispEl=document.getElementById('cd-display');
+  if(cdInterval)clearInterval(cdInterval);
+  if(!cdData.date){nameEl.textContent='No event set';dispEl.innerHTML='';return;}
+  nameEl.textContent=cdData.name||'Upcoming Event';
+  function update(){
+    const now=new Date();
+    const target=new Date(cdData.date+'T00:00:00');
+    const diff=target-now;
+    if(diff<=0){dispEl.innerHTML='<span class="cd-past">🎉 Event has arrived!</span>';return;}
+    const days=Math.floor(diff/86400000);
+    const hrs=Math.floor((diff%86400000)/3600000);
+    const mins=Math.floor((diff%3600000)/60000);
+    const secs=Math.floor((diff%60000)/1000);
+    dispEl.innerHTML=`
+      <div class="cd-unit"><span class="cd-num">${String(days).padStart(2,'0')}</span><span class="cd-lbl">days</span></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><span class="cd-num">${String(hrs).padStart(2,'0')}</span><span class="cd-lbl">hrs</span></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><span class="cd-num">${String(mins).padStart(2,'0')}</span><span class="cd-lbl">min</span></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><span class="cd-num">${String(secs).padStart(2,'0')}</span><span class="cd-lbl">sec</span></div>`;
+  }
+  update();
+  cdInterval=setInterval(update,1000);
+}
+
+function toggleCdForm(){
+  const form=document.getElementById('cd-form');
+  const open=form.style.display==='flex';
+  form.style.display=open?'none':'flex';
+  if(!open&&cdData.date){
+    document.getElementById('cd-name-input').value=cdData.name;
+    document.getElementById('cd-date-input').value=cdData.date;
+  }
+}
+function saveCountdown(){
+  const name=document.getElementById('cd-name-input').value.trim();
+  const date=document.getElementById('cd-date-input').value;
+  if(!date){alert('Please pick a date.');return;}
+  cdData={name,date};
+  localStorage.setItem('cc-countdown',JSON.stringify(cdData));
+  toggleCdForm();
+  renderCountdown();
+  showToast('Countdown set!');
+}
+renderCountdown();
+
+/* ───── NOTES ───── */
+let notes=JSON.parse(localStorage.getItem('cc-notes')||'[]');
+
+function saveNotes(){localStorage.setItem('cc-notes',JSON.stringify(notes));}
+
+function renderNotes(){
+  const grid=document.getElementById('notes-grid');
+  grid.innerHTML=notes.map((n,i)=>`
+    <div class="note-card" style="animation-delay:${i*.05}s">
+      <textarea placeholder="Start typing…" onblur="updateNote(${n.id},this.value)">${escHtml(n.text)}</textarea>
+      <div class="note-footer">
+        <span class="note-ts">${n.ts}</span>
+        <button class="note-del" onclick="deleteNote(${n.id})" title="Delete">✕</button>
+      </div>
+    </div>`).join('');
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function addNote(){
+  const n={id:Date.now(),text:'',ts:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})};
+  notes.unshift(n);
+  saveNotes();
+  renderNotes();
+  // focus new note textarea
+  const ta=document.querySelector('.note-card textarea');
+  if(ta)ta.focus();
+}
+
+function updateNote(id,val){
+  const n=notes.find(x=>x.id===id);
+  if(n){n.text=val;saveNotes();}
+}
+
+function deleteNote(id){
+  notes=notes.filter(x=>x.id!==id);
+  saveNotes();
+  renderNotes();
+}
+renderNotes();
+
+/* ───── LAUNCH CARDS ───── */
+const DEFAULTS=[
+  {id:1,name:"Shannon's Schedule",url:"https://mattogonosky-stack.github.io/shannons-schedule/",desc:"View the live schedule — see upcoming events and calendar at a glance.",tag:"live",icon:"📅",color:"#00d4ff"},
+  {id:2,name:"Schedule Editor",url:"https://mattogonosky-stack.github.io/shannons-schedule/?edit",desc:"Edit mode — add, update, or remove scheduled events.",tag:"edit",icon:"✏️",color:"#ffc13b"},
+  {id:3,name:"Homebase Finances",url:"https://mattogonosky-stack.github.io/homebasefinances/",desc:"Home finance tracking — budgets, expenses, and financial overview.",tag:"tool",icon:"🏠",color:"#7fff6b"},
+  {id:4,name:"BMLA HOA",url:"https://mattogonosky-stack.github.io/bmla-hoa/",desc:"BMLA Homeowners Association portal — community docs and resources.",tag:"live",icon:"🏘️",color:"#ff6b35"}
+];
+let cards=JSON.parse(localStorage.getItem('cc-cards')||'null')||DEFAULTS;
+let editId=null;
+
+function saveCards(){localStorage.setItem('cc-cards',JSON.stringify(cards));}
+
+function shortUrl(url){try{const u=new URL(url);return u.hostname+(u.pathname.length>1?u.pathname.replace(/\/$/,''):'');}catch{return url;}}
+function tagClass(t){return{live:'tag-live',edit:'tag-edit',tool:'tag-tool'}[t]||'tag-live';}
+function tagLabel(t){return{live:'Live',edit:'Edit Mode',tool:'Tool'}[t]||t;}
+
+function renderCards(){
+  const g=document.getElementById('cards-grid');
+  g.innerHTML=cards.map(c=>`
+    <div class="card" style="--card-color:${c.color}">
+      <div class="card-controls">
+        <button class="ctrl" onclick="editCard(${c.id})">✎</button>
+        <button class="ctrl del" onclick="deleteCard(${c.id})">✕</button>
+      </div>
+      <div class="card-bar"></div>
+      <div class="card-body">
+        <div class="card-head">
+          <div class="card-icon">${c.icon||'🔗'}</div>
+          <span class="tag ${tagClass(c.tag)}">${tagLabel(c.tag)}</span>
+        </div>
+        <div class="card-name">${c.name}</div>
+        <div class="card-desc">${c.desc||'No description.'}</div>
+      </div>
+      <div class="card-foot">
+        <div class="card-url">${shortUrl(c.url)}</div>
+        <a href="${c.url}" target="_blank" rel="noopener" class="launch-btn">
+          Launch
+          <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 8.5L8.5 1.5M8.5 1.5H4M8.5 1.5V6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </a>
+      </div>
+    </div>`).join('')+`
+    <div class="card-add" onclick="openModal()">
+      <div class="plus">+</div>
+      <span>Add Site</span>
+    </div>`;
+}
+
+function openModal(id=null){
+  editId=id;
+  if(id){
+    const c=cards.find(x=>x.id===id);
+    document.getElementById('modal-title').textContent='Edit Site';
+    document.getElementById('f-name').value=c.name;
+    document.getElementById('f-url').value=c.url;
+    document.getElementById('f-desc').value=c.desc;
+    document.getElementById('f-tag').value=c.tag;
+    document.getElementById('f-icon').value=c.icon;
+    document.getElementById('f-color').value=c.color;
+  } else {
+    document.getElementById('modal-title').textContent='Add Site';
+    ['f-name','f-url','f-desc','f-icon'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('f-tag').value='live';
+    document.getElementById('f-color').value='#00d4ff';
+  }
+  document.getElementById('overlay').classList.add('open');
+}
+function closeModal(){document.getElementById('overlay').classList.remove('open');editId=null;}
+function overlayClick(e){if(e.target===document.getElementById('overlay'))closeModal();}
+function editCard(id){openModal(id);}
+function deleteCard(id){if(!confirm('Remove this site?'))return;cards=cards.filter(c=>c.id!==id);saveCards();renderCards();showToast('Site removed.');}
+
+function saveCard(){
+  const name=document.getElementById('f-name').value.trim();
+  const url=document.getElementById('f-url').value.trim();
+  if(!name||!url){alert('Name and URL are required.');return;}
+  if(editId){
+    const c=cards.find(x=>x.id===editId);
+    c.name=name;c.url=url;
+    c.desc=document.getElementById('f-desc').value.trim();
+    c.tag=document.getElementById('f-tag').value;
+    c.icon=document.getElementById('f-icon').value.trim()||'🔗';
+    c.color=document.getElementById('f-color').value;
+    showToast('Site updated!');
+  } else {
+    cards.push({id:Date.now(),name,url,
+      desc:document.getElementById('f-desc').value.trim(),
+      tag:document.getElementById('f-tag').value,
+      icon:document.getElementById('f-icon').value.trim()||'🔗',
+      color:document.getElementById('f-color').value});
+    showToast('Site added!');
+  }
+  saveCards();closeModal();renderCards();
+}
+
+/* ───── TOAST ───── */
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+renderCards();
+</script>
+</body>
+</html>
